@@ -22,3 +22,7 @@ build/
 # Gizli bilgi veya yapılandırma dosyaları
 .env
 config.js
+
+# GitHub'a yüklenmesini istemediğimiz dosyalar
+github-rehber.md
+git-dosya-kaldir.md
