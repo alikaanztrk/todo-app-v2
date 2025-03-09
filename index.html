@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>To-do App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .todo-item {
+            margin-bottom: 1rem;
+        }
+        .todo-item .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+        .todo-item .card:hover {
+            transform: translateY(-2px);
+        }
+        .badge-group .badge {
+            margin-left: 0.5rem;
+        }
+        .subtasks-title {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .subtask {
+            padding: 0.3rem 0;
+        }
+        .due-date {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .btn-group .btn {
+            margin-right: 0.5rem;
+        }
+        .subtask {
+            margin-left: 20px;
+            font-size: 0.9em;
+        }
+        .priority-high { border-left: 4px solid #dc3545; }
+        .priority-medium { border-left: 4px solid #ffc107; }
+        .priority-low { border-left: 4px solid #28a745; }
+        .tag {
+            font-size: 0.8em;
+            padding: 2px 8px;
+            background-color: #e9ecef;
+            border-radius: 12px;
+            margin-right: 5px;
+        }
+        .context-menu {
+            position: fixed;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding: 5px 0;
+            z-index: 1000;
+        }
+        
+        .menu-item {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        
+        .menu-item:hover {
+            background-color: #f0f0f0;
+        }
+        .due-date.text-warning {
+            color: #fd7e14 !important;
+        }
+        .due-date.text-danger {
+            color: #dc3545 !important;
+        }
+        .btn-outline-success {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Tema Stilleri */
+        [data-theme="dark"] {
+            --bg-color: #1a1b1e;
+            --text-color: #e4e6eb;
+            --card-bg: #242526;
+            --border-color: #3a3b3c;
+            --input-bg: #3a3b3c;
+            --input-text: #e4e6eb;
+            --sidebar-bg: #242526;
+            --hover-bg: #3a3b3c;
+            --accent-color: #4f46e5;
+            --secondary-text: #b0b3b8;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f5f7fa;
+            --text-color: #1a1b1e;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --input-bg: #ffffff;
+            --input-text: #1a1b1e;
+            --sidebar-bg: #ffffff;
+            --hover-bg: #f8f9fa;
+            --accent-color: #4f46e5;
+            --secondary-text: #6c757d;
+        }
+
+        [data-theme="colorful"] {
+            --bg-color: #f3f4ff;
+            --text-color: #2d3748;
+            --card-bg: #ffffff;
+            --column-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --hover-bg: #edf2ff;
+            --accent-color: #6366f1;
+            --secondary-text: #4a5568;
+            --sidebar-bg: #6366f1;
+            --input-bg: #ffffff;
+            --input-text: #2d3748;
+            --card-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .next-status-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--accent-color);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .next-status-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Tema Seçici */
+        .theme-selector {
+            display: flex;
+            gap: 5px;
+            position: static;
+        }
+
+        .theme-selector button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+
+        .theme-selector button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .theme-selector button.active {
+            border-color: var(--accent-color);
+        }
+
+        .theme-selector button.btn-info {
+            background-color: #0dcaf0;
+            color: #fff;
+        }
+
+        .theme-selector button.btn-info:hover {
+            background-color: #0bacce;
+        }
+
+        .theme-selector i {
+            font-size: 1.1rem;
+        }
+
+        /* Header buttons container */
+        .header-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* Form ve input stilleri */
+        .form-control, .form-select {
+            background-color: var(--input-bg) !important;
+            color: var(--input-text) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--input-bg) !important;
+            color: var(--input-text) !important;
+            border-color: var(--accent-color) !important;
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25) !important;
+        }
+
+        .card {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        .modal-header {
+            border-bottom-color: var(--border-color) !important;
+        }
+
+        .modal-footer {
+            border-top-color: var(--border-color) !important;
+        }
+
+        /* Özel bileşen stilleri */
+        .subtasks-title {
+            color: var(--secondary-text) !important;
+        }
+
+        .due-date {
+            color: var(--secondary-text) !important;
+        }
+
+        /* Hover efektleri */
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .btn-outline-secondary {
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: var(--hover-bg) !important;
+            color: var(--accent-color) !important;
+        }
+
+        .btn-outline-success.rounded-circle {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-body {
+            padding-bottom: 70px;
+        }
+
+        .badge.bg-info {
+            font-size: 0.9em;
+        }
+
+        .dates-container {
+            margin: 10px 0;
+        }
+
+        .completed-date {
+            color: #28a745;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .completed-date i {
+            margin-right: 5px;
+        }
+
+        /* Yeni buton stilleri */
+        .action-buttons .btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 3px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .action-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        /* Alt görev butonları için stil */
+        .subtask-buttons .btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        /* Form label stilleri */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Input placeholder rengi */
+        .form-control::placeholder {
+            color: var(--secondary-text);
+            opacity: 0.7;
+        }
+
+        /* Sidebar stilleri */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            width: 60px;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            z-index: 1000;
+            border-right: 1px solid var(--border-color);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .sidebar:hover {
+            width: 200px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 20px 0;
+            margin: 0;
+        }
+
+        .nav-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin: 5px 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-color);
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            margin: 2px 0;
+            border-radius: 0 30px 30px 0;
+        }
+
+        .nav-link:hover {
+            background: var(--hover-bg);
+            color: var(--accent-color);
+        }
+
+        .nav-link.active {
+            background: var(--accent-color);
+            color: white;
+            margin-right: 10px;
+        }
+
+        .nav-link i {
+            width: 30px;
+            font-size: 1.2rem;
+        }
+
+        .nav-link span {
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar:hover .nav-link span {
+            opacity: 1;
+        }
+
+        /* Ana içerik alanını sidebar'a göre ayarla */
+        .main-content {
+            margin-left: 60px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Dark tema için sidebar renkleri */
+        [data-theme="dark"] .sidebar {
+            background: #242526;
+        }
+
+        .container {
+            max-width: none;
+            padding-right: 30px;
+            padding-left: 90px;
+        }
+
+        /* Sidebar renk düzeltmeleri */
+        .sidebar {
+            background-color: var(--sidebar-bg) !important;
+        }
+
+        [data-theme="colorful"] .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        [data-theme="colorful"] .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="colorful"] .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="colorful"] .todo-card {
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        [data-theme="colorful"] .todo-description {
+            color: var(--secondary-text);
+        }
+
+        [data-theme="colorful"] .form-control {
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="colorful"] .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-container h4 {
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .chart-container canvas {
+            max-height: 400px;
+        }
+
+        /* Liste görünümü için özel container genişliği */
+        .main-content .container {
+            max-width: 80%; /* Genişliği %80'e düşür */
+            margin: 0 auto; /* Ortalamak için */
+        }
+
+        /* Görev kartları için özel genişlik */
+        .todo-item .card {
+            max-width: 80%;
+            margin: 0 auto 1rem auto;
+        }
+
+        /* Görev ekleme formu için özel genişlik */
+        .card.mb-4 {
+            max-width: 80%;
+            margin: 0 auto 1.5rem auto;
+        }
+
+        /* Başlık için özel genişlik */
+        .main-content h1 {
+            max-width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+
+        /* Filtreleme butonları için özel stiller */
+        .main-content .mb-4 .btn-group {
+            width: 80%;
+            display: flex;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 5px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin: 0 auto;
+        }
+
+        .main-content .mb-4 .btn-group .btn {
+            flex: 1;
+            margin: 0;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: var(--text-color);
+            position: relative;
+        }
+
+        /* Butonlar arası ayraç */
+        .main-content .mb-4 .btn-group .btn:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 20%;
+            height: 60%;
+            width: 1px;
+            background-color: var(--border-color);
+        }
+
+        /* Light tema için buton stilleri */
+        [data-theme="light"] .main-content .mb-4 .btn-group .btn:hover {
+            background: #f0f2ff;
+            color: #4f46e5;
+        }
+
+        [data-theme="light"] .main-content .mb-4 .btn-group .btn.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        /* Dark tema için buton stilleri */
+        [data-theme="dark"] .main-content .mb-4 .btn-group .btn:hover {
+            background: #3a3b3c;
+            color: #6366f1;
+        }
+
+        [data-theme="dark"] .main-content .mb-4 .btn-group .btn.active {
+            background: #6366f1;
+            color: white;
+        }
+
+        /* Colorful tema için buton stilleri */
+        [data-theme="colorful"] .main-content .mb-4 .btn-group .btn:hover {
+            background: #edf2ff;
+            color: #6366f1;
+            transform: translateY(-2px);
+        }
+
+        [data-theme="colorful"] .main-content .mb-4 .btn-group .btn.active {
+            background: #6366f1;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Aktif buton stili */
+        .main-content .mb-4 .btn-group .btn.active {
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Aktif butondan sonraki ayracı gizle */
+        .main-content .mb-4 .btn-group .btn.active::after {
+            display: none;
+        }
+
+        .about-content {
+            color: var(--text-color);
+        }
+        
+        .about-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .about-content ul li {
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .about-content ul li:before {
+            content: "•";
+            color: var(--accent-color);
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        #aboutModal .modal-content {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        #aboutModal .modal-header {
+            border-bottom-color: var(--border-color);
+        }
+        
+        #aboutModal .modal-footer {
+            border-top-color: var(--border-color);
+        }
+    </style>
+</head>
+<body class="container mt-4">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <nav class="sidebar-nav">
+            <ul class="nav-items">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link active">
+                        <i class="bi bi-list-check"></i>
+                        <span>Liste Görünümü</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="kanban.html" class="nav-link">
+                        <i class="bi bi-kanban"></i>
+                        <span>Kanban Görünümü</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="openStats()">
+                        <i class="bi bi-graph-up"></i>
+                        <span>İstatistikler</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="openAboutModal()">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Hakkında</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Ana içerik -->
+    <div class="main-content">
+        <!-- Tema Seçici -->
+        <div class="header-actions">
+            <div class="theme-selector">
+                <button class="btn btn-light" onclick="setTheme('light')" title="Açık Tema">
+                    <i class="bi bi-sun-fill"></i>
+                </button>
+                <button class="btn btn-dark" onclick="setTheme('dark')" title="Koyu Tema">
+                    <i class="bi bi-moon-fill"></i>
+                </button>
+                <button class="btn btn-info" onclick="setTheme('colorful')" title="Renkli Tema">
+                    <i class="bi bi-palette-fill"></i>
+                </button>
+            </div>
+        </div>
+
+        <h1>Yapılacaklar Listesi</h1>
+        
+        <!-- Görev Ekleme Formu -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <input type="text" id="todoInput" class="form-control" placeholder="Görev başlığı">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <textarea id="todoDescription" class="form-control" placeholder="Açıklama"></textarea>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <select id="todoStatus" class="form-control">
+                                    <option value="bekliyor">Bekliyor</option>
+                                    <option value="başladı">Başladı</option>
+                                    <option value="yapılıyor">Yapılıyor</option>
+                                    <option value="bitmeye_yakın">Bitmeye Yakın</option>
+                                    <option value="bitti">Bitti</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <select id="todoPriority" class="form-control">
+                                    <option value="düşük">Düşük</option>
+                                    <option value="orta">Orta</option>
+                                    <option value="yüksek">Yüksek</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="datetime-local" id="todoDueDate" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <button onclick="ekle()" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-lg"></i> Görev Ekle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtreleme -->
+        <div class="mb-4">
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary" onclick="filterByStatus('all')">Tümü</button>
+                <button class="btn btn-outline-secondary" onclick="filterByStatus('bekleyenler')">Bekliyor</button>
+                <button class="btn btn-outline-secondary" onclick="filterByStatus('yapilanlar')">Devam Eden</button>
+                <button class="btn btn-outline-secondary" onclick="filterByStatus('bitenler')">Tamamlandı</button>
+            </div>
+        </div>
+
+        <!-- Görev Listesi -->
+        <div id="todoList" class="todo-container">
+            <!-- Görevler buraya dinamik olarak eklenecek -->
+        </div>
+
+        <!-- Alt Görev Ekleme Modalı -->
+        <div class="modal fade" id="altGorevModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Alt Görev Ekle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="parentTaskId">
+                        <div class="form-group">
+                            <label>Alt Görev Başlığı</label>
+                            <input type="text" id="altGorevBaslik" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-primary" onclick="altGorevKaydet()">Ekle</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alt Görev Düzenleme Modal -->
+        <div class="modal fade" id="subtaskEditModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Alt Görev Düzenle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="editSubtaskId">
+                        <div class="form-group">
+                            <label>Alt Görev Başlığı</label>
+                            <input type="text" id="editSubtaskTitle" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-primary" onclick="subtaskDuzenlemeyiKaydet()">Kaydet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modallar -->
+        <div class="modal fade" id="taskEditModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Görevi Düzenle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="editTaskId">
+                        <div class="form-group mb-3">
+                            <label>Başlık</label>
+                            <input type="text" id="editTaskTitle" class="form-control">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Açıklama</label>
+                            <textarea id="editTaskDescription" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Bitiş Tarihi ve Saati</label>
+                            <input type="datetime-local" id="editTaskDueDate" class="form-control">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Öncelik</label>
+                            <select id="editTaskPriority" class="form-control">
+                                <option value="düşük">Düşük</option>
+                                <option value="orta">Orta</option>
+                                <option value="yüksek">Yüksek</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-primary" onclick="gorevDuzenlemeyiKaydet()">Kaydet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hakkında Modal -->
+        <div class="modal fade" id="aboutModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Hakkında
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-check2-square" style="font-size: 3rem; color: var(--accent-color);"></i>
+                            <h4 class="mt-2">Todo App v2.0</h4>
+                        </div>
+                        <div class="about-content">
+                            <p><strong>Geliştirici:</strong> Ali KaaN</p>
+                            <p><strong>Versiyon:</strong> 2.0.0</p>
+                            <p><strong>Teknolojiler:</strong></p>
+                            <ul>
+                                <li>Electron.js</li>
+                                <li>SQLite</li>
+                                <li>Bootstrap 5</li>
+                                <li>Chart.js</li>
+                            </ul>
+                            <p class="mt-3">Bu uygulama, görevlerinizi kolayca yönetmeniz için tasarlanmıştır. Liste ve Kanban görünümleri ile görevlerinizi organize edebilir, alt görevler ekleyebilir ve istatistiklerinizi takip edebilirsiniz.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Kapat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="renderer.js"></script>
+    </div>
+</body>
+</html>
